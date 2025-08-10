@@ -1,7 +1,8 @@
 # src/agents/coordinator.py
 from pydantic import BaseModel, Field
 from langchain_core.prompts import ChatPromptTemplate
-from src.agents.base_agent import BaseAgent, AgentResponse
+from agents.base_agent import BaseAgent, AgentResponse
+from utils.prompts import SystemPrompts
 from typing import Dict, Any
 
 class QueryClassification(BaseModel):
@@ -23,27 +24,9 @@ class QueryClassification(BaseModel):
 class CoordinatorAgent(BaseAgent):
     def __init__(self):
         super().__init__("Coordinator")
-        self.specialist_agents = {}
     
     def get_system_prompt(self) -> str:
-        return """You are a hostel coordinator routing student queries to specialists.
-
-        Route queries to:
-        - COMPLAINT: Maintenance issues, repairs, broken items, facility problems
-        - LOST_FOUND: Lost or found items, missing belongings
-        - MESS: Food, menu, dining hall, meal times, food quality
-        - RULES: Hostel policies, visitor rules, curfew, procedures
-        - STATUS: Power outages, water supply, internet, facility status
-        - GENERAL: Basic greetings, general questions
-
-        Assess urgency:
-        - urgent: Safety hazards, emergencies
-        - high: Broken essential items, major problems
-        - medium: Standard complaints, issues
-        - low: Information requests, minor issues
-
-        Safety concerns: electrical hazards, gas leaks, structural damage, security issues
-        """
+        return SystemPrompts.get_coordinator_prompt()
     
     async def process_query(self, query: str, context: Dict[str, Any]) -> AgentResponse:
         # Classify the query
@@ -67,7 +50,7 @@ class CoordinatorAgent(BaseAgent):
             agent = StatusAgent()
         else:
             return AgentResponse(
-                content="Hello! I'm here to help with hostel matters. What do you need assistance with?",
+                content="Hello! I'm HostelBuddy, your AI assistant for hostel matters. I can help with complaints, lost & found, mess queries, rules, and facility status. What do you need assistance with?",
                 urgency="low"
             )
         

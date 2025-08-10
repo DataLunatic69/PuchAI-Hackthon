@@ -2,8 +2,10 @@
 from pydantic import BaseModel, Field
 from langchain_core.prompts import ChatPromptTemplate
 from src.agents.base_agent import BaseAgent, AgentResponse
-from config.form_links import FormLinks
+from src.tools.form_selector import FormSelector
+from src.utils.prompts import SystemPrompts
 from typing import Dict, Any
+
 
 class ComplaintAnalysis(BaseModel):
     """Analysis of a maintenance complaint"""
@@ -29,33 +31,19 @@ class ComplaintAgent(BaseAgent):
         super().__init__("Complaint Handler")
     
     def get_system_prompt(self) -> str:
-        return """You are a maintenance complaint specialist for hostel management.
-
-        Analyze complaints and categorize:
-        - electrical: fans, lights, outlets, wiring, power issues
-        - plumbing: taps, showers, toilets, leaks, water pressure
-        - furniture: beds, chairs, tables, storage, doors, windows
-        - room: cleanliness, pests, ventilation, general room issues
-        - internet: WiFi, connectivity, network problems
-        - general: other facility issues
-
-        Assess severity:
-        - critical: Safety hazards, major damage, urgent health concerns
-        - major: Essential services not working, significant problems
-        - moderate: Important but not urgent issues
-        - minor: Small problems, cosmetic issues
-
-        Always provide helpful temporary solutions and realistic timelines.
-        """
+        return SystemPrompts.get_complaint_handler_prompt()
     
     async def process_query(self, query: str, context: Dict[str, Any]) -> AgentResponse:
         # Analyze the complaint
         analysis = await self._analyze_complaint(query, context)
         
-        # Get appropriate form
-        form_link = FormLinks.get_complaint_form(analysis.issue_type)
+        # Get appropriate form using FormSelector
+        form_link, form_explanation = FormSelector.get_complaint_form(
+            analysis.issue_type, 
+            analysis.severity
+        )
         
-        # Generate response
+        # Generate response content
         response_content = await self._generate_response(query, analysis, context)
         
         # Determine urgency
@@ -81,7 +69,7 @@ class ComplaintAgent(BaseAgent):
         if context.get("image_data"):
             image_analysis = await self.analyze_image(
                 context["image_data"],
-                "Analyze this hostel maintenance issue. Describe the problem and assess severity."
+                SystemPrompts.get_vision_analysis_prompt()
             )
             image_context = f"\nImage analysis: {image_analysis}"
         

@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from typing import Dict, Any, Optional, List, TypeVar, Type
 from pydantic import BaseModel, Field
 from langchain_core.prompts import ChatPromptTemplate
-from src.tools.groq_client import get_groq_llm
+from tools.groq_client import get_groq_llm
 
 T = TypeVar('T', bound=BaseModel)
 
