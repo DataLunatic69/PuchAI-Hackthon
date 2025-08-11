@@ -1,0 +1,21 @@
+# .dockerignore
+.git
+.gitignore
+README.md
+DEPLOYMENT.md
+.env
+.env.*
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+.pytest_cache
+.coverage
+.venv
+venv/
+.DS_Store
+*.log
+deployment/
+test_*.py
+*.md
